@@ -17,52 +17,59 @@ function App() {
     </div>
   );
   
-  async function tu(element){
+
+  var count = 0;
+  var commands=[];
+
+  
+  function next(){
+    if((commands[count].match(/=/g) || []).length === 1){ // create variable
+      createVariable(commands[count]);
+    }
+    else if((commands[count].match(/=/g) || []).length === 0){
+      runCode(commands[count]);
+    }
+    count++;
+  }
+
+  function change2(event){
+    if(event.key === "Escape"){
+      commands = event.target.value.split("\n");
+      count=0;
+      next();
+    }
+  }
+  
+  function runCode(element){
     const getField = element.split(".");
-    await data.forEach(el => {
-      console.log(el.json);
-      if(el.variable == getField[0]){
-        /* console.log(el.json); */
+    data.forEach(el => {
+      if(el.variable === getField[0]){
+        console.log(el.json[getField[1]]);
       }
     })
   }
 
-  function change2(event){
-    if(event.key == "Escape"){
-      event.target.value.split("\n").forEach(async element => { //select one code
-        
-        console.log(element);
-
-        if((element.match(/=/g) || []).length == 1){
-
-          const query = element.toString().split("=");
-
-          if(query[1].includes("db.get")){
-
-            const myjson = query[1].split(/[\"\']+/)[1];
-             axios.get("https://test-e1ab8.firebaseio.com/"+myjson+".json")
-            .then(res => {
-              data.push({
-                variable : query[0].toString().trim(),
-                json: Object.values(res.data)[0]
-              })
-            })
-          }
-        }
-        else if((element.match(/=/g) || []).length == 0){
-           tu(element);
-        }
-        else setcode("çok uzun"); 
-      });
+  function createVariable(element){
+    const query = element.toString().split("=");
+    if(query[1].includes("db.get")){
+      const myjson = query[1].split(/["']+/)[1];
+       axios.get("https://test-e1ab8.firebaseio.com/"+myjson+".json")
+      .then(res => {
+        data.push({
+          variable : query[0].toString().trim(),
+          json: Object.values(res.data)[0]
+        })
+        next();
+      })
     }
   }
 
-  function addData(){
+  /* function addData(){
     axios.post("https://test-e1ab8.firebaseio.com/data.json",{
       username:"batuhan",
       lastname:"asd"
     })
-  }
+  } */
 }
 
 export default App;
